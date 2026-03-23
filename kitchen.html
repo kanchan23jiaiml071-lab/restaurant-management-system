@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Kitchen View</title>
+</head>
+<body>
+
+<h2>👨‍🍳 Kitchen Orders</h2>
+
+<button onclick="loadOrders()">🔄 Load Orders</button>
+
+<div id="orders"></div>
+
+<script type="module">
+
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyASTsTUmzTLtFZPSmhLRApFp4WcY1Y4yB4",
+    authDomain: "restaurant-system-25208.firebaseapp.com",
+    projectId: "restaurant-system-25208",
+    storageBucket: "restaurant-system-25208.firebasestorage.app",
+    messagingSenderId: "588932350090",
+    appId: "1:588932350090:web:e6900dd3d7293184e0ed73"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // ✅ Load Orders
+  window.loadOrders = async function () {
+    const ordersDiv = document.getElementById("orders");
+    ordersDiv.innerHTML = "";
+
+    const querySnapshot = await getDocs(collection(db, "orders"));
+
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+
+      if (data.status === "pending") {
+        const div = document.createElement("div");
+
+        div.innerHTML = `
+          <p>
+            <b>${data.customerName}</b><br>
+            ${data.item} x ${data.quantity}<br>
+            Status: ${data.status}
+          </p>
+          <button onclick="markReady('${docSnap.id}')">✅ Mark Ready</button>
+          <hr>
+        `;
+
+        ordersDiv.appendChild(div);
+      }
+    });
+  }
+
+  // ✅ Mark Order Ready
+  window.markReady = async function (id) {
+    const orderRef = doc(db, "orders", id);
+
+    await updateDoc(orderRef, {
+      status: "ready",
+      readyAt: new Date()
+    });
+
+    alert("✅ Order Marked Ready");
+
+    // reload orders
+    loadOrders();
+  }
+
+</script>
+
+</body>
+</html>
